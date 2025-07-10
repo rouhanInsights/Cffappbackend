@@ -15,7 +15,7 @@ router.get('/', verifyToken, getalladdress);
 router.post('/', verifyToken, addaddress);
 
 // ✏️ Update address
-router.put('/:addressId', verifyToken, editaddress);
+router.put('/:id', verifyToken, editaddress);
 
 router.put("/:addressId/default", verifyToken, setDefaultAddress);
 
