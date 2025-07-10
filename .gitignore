@@ -1,5 +1,6 @@
 # Ignore environment variables
-.env
+echo ".env" >> .gitignore
+
 
 # Node.js dependencies
 node_modules

@@ -22,13 +22,6 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// Admin check
-const requireAdmin = (req, res, next) => {
-  if (!req.user?.isAdmin) {
-    return res.status(403).json({ error: 'Access denied: Admins only' });
-  }
-  next();
-  console.log("req.user.isAdmin:", req.user?.isAdmin);
-};
 
-module.exports = { verifyToken, requireAdmin };
+
+module.exports = { verifyToken };

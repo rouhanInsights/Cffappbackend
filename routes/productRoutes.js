@@ -11,13 +11,15 @@ const {
   deleteProduct,
   search,
   category,
-  relateditems
+  relateditems,getBestSellers,getTopOffers
 } = require('../controllers/productController');
 
 // PUBLIC ROUTES (order matters!)
 router.get('/category', category); // /products/category
 router.get('/search', search);     // /products/search
 router.get('/related/:category_id/:exclude_id', relateditems); // /products/related/...
+router.get("/top-offers", getTopOffers);
+router.get("/best-sellers", getBestSellers);
 
 // Must come AFTER the above
 router.get('/', getAllProducts);   // /products

@@ -1,49 +1,63 @@
 const pool = require('../Db');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const asyncHandler = require('../middlewares/asyncHandler');
+const logger = require('../utils/logger');
+const path = require('path');
 
-// GET /api/users/profile
-const getProfile = async (req, res) => {
+// GET profile
+const getProfile = asyncHandler(async (req, res) => {
   const userId = req.user.userId;
 
-  try {
-    const result = await pool.query(
-      `SELECT user_id, name, email, phone
-       FROM cust_users
-       WHERE user_id = $1`,
-      [userId]
-    );
+  const result = await pool.query(
+    `SELECT user_id, name, phone, email, alt_email, gender, dob, profile_image_url
+     FROM cust_users
+     WHERE user_id = $1`,
+    [userId]
+  );
 
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Get Profile Error:', err);
-    res.status(500).json({ error: 'Failed to fetch profile' });
+  const user = result.rows[0];
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
   }
-};
 
-// PUT /api/users/profile
-const updateProfile = async (req, res) => {
+  logger.info(`🔍 Profile fetched for user ${userId}`);
+  res.json(user);
+});
+
+// PUT profile with optional image
+const updateProfile = asyncHandler(async (req, res) => {
   const userId = req.user.userId;
-  const { name, email } = req.body;
+  const {
+    name,
+    email,
+    phone,
+    alt_email,
+    gender,
+    dob,
+  } = req.body;
 
-  try {
-    const result = await pool.query(
-      `UPDATE cust_users
-       SET name = $1, email = $2
-       WHERE user_id = $3
-       RETURNING user_id, name, email, phone`,
-      [name, email, userId]
-    );
+  const profileImagePath = req.file ? `/uploads/${req.file.filename}` : null;
 
-    res.json({ message: 'Profile updated', user: result.rows[0] });
-  } catch (err) {
-    console.error('Update Profile Error:', err);
-    res.status(500).json({ error: 'Failed to update profile' });
-  }
+  const result = await pool.query(
+    `UPDATE cust_users
+     SET 
+       name = COALESCE($1, name),
+       email = COALESCE($2, email),
+       phone = COALESCE($3, phone),
+       alt_email = $4,
+       gender = $5,
+       dob = $6,
+       profile_image_url = COALESCE($7, profile_image_url)
+     WHERE user_id = $8
+     RETURNING user_id, name, phone, email, alt_email, gender, dob, profile_image_url`,
+    [name, email, phone, alt_email, gender, dob, profileImagePath, userId]
+  );
+
+  logger.info(`✅ Profile updated for user ${userId}`);
+  res.json({ message: 'Profile updated successfully', user: result.rows[0] });
+});
+
+module.exports = {
+  getProfile,
+  updateProfile,
 };
-
-
-
-
-
-module.exports = { getProfile, updateProfile };

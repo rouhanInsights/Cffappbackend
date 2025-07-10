@@ -1,4 +1,5 @@
 const pool = require('../Db');
+const { get } = require('../routes/productRoutes');
 
 // Get all products
 const getAllProducts = async (req, res) => {
@@ -96,10 +97,10 @@ const search = async (req, res) => {
     const queryText = `SELECT * FROM cust_products WHERE name ILIKE $1;`
     const values = [`%${q}%`];
 
-    console.log("Executing Query:", queryText, "with values:", values); // 🔍 Debug
+    
     const result = await pool.query(queryText, values);
 
-    console.log("Search Results:", result.rows); // 🔍 Debug
+   
 
     res.json(result.rows);
   } catch (err) {
@@ -109,7 +110,7 @@ const search = async (req, res) => {
 };
 const category = async (req, res) => {
   const { name } = req.query;
-  console.log("✅ Category route hit with name:", name);
+ 
 
   if (!name) {
     return res.status(400).json({ error: "Category name is required" });
@@ -126,7 +127,7 @@ const category = async (req, res) => {
     const values = [name];
     const result = await pool.query(query, values);
 
-    console.log("✅ Query successful, rows returned:", result.rows.length);
+   
     res.json(result.rows);
   } catch (err) {
     console.error("❌ DATABASE ERROR:", err); // SHOW THE ERROR
@@ -155,7 +156,97 @@ const relateditems = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+// GET /api/products/top-offers
+const getTopOffers = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+         p.product_id,
+         p.name,
+         p.description,
+         p.product_short_description,
+         p.price,
+         p.sale_price,
+         p.stock_quantity,
+         p.weight,
+         p.image_url,
+         p.created_at,
+         c.category_name,
+         CASE 
+           WHEN p.sale_price IS NOT NULL AND p.sale_price < p.price 
+           THEN ROUND(((p.price - p.sale_price) / p.price) * 100)
+           ELSE 0
+         END AS discount
+       FROM cust_products p
+       JOIN cust_categories c ON p.category_id = c.category_id
+       WHERE p.product_featured = true
+       ORDER BY p.created_at DESC`
+    );
 
+    const transformed = result.rows.map(p => ({
+      id: p.product_id,
+      name: p.name,
+      description: p.description,
+      short_description: p.product_short_description,
+      price: p.price,
+      sale_price: p.sale_price,
+      image: p.image_url,
+      weight: p.weight,
+      discount: p.discount,
+    }));
+
+    res.json(transformed);
+  } catch (err) {
+    console.error("Top Offers Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch top offers" });
+  }
+};
+
+// GET /api/products/best-sellers
+const getBestSellers = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+         p.product_id,
+         p.name,
+         p.description,
+         p.product_short_description,
+         p.price,
+         p.sale_price,
+         p.stock_quantity,
+         p.weight,
+         p.image_url,
+         p.created_at,
+         c.category_name,
+         CASE 
+           WHEN p.sale_price IS NOT NULL AND p.sale_price < p.price 
+           THEN ROUND(((p.price - p.sale_price) / p.price) * 100)
+           ELSE 0
+         END AS discount
+       FROM cust_products p
+       JOIN cust_categories c ON p.category_id = c.category_id
+       WHERE p.product_visibility = true
+       ORDER BY p.created_at DESC`
+    );
+
+    const transformed = result.rows.map(p => ({
+      id: p.product_id,
+      name: p.name,
+      description: p.description,
+      short_description: p.product_short_description,
+      price: p.price,
+      sale_price: p.sale_price,
+      image: p.image_url,
+      weight: p.weight,
+      discount: p.discount,
+    }));
+
+    res.json(transformed);
+  } catch (err) {
+    console.error("Best Sellers Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch best sellers" });
+  }
+};
 
 
 module.exports = {
@@ -165,5 +256,5 @@ module.exports = {
   updateProduct,
   deleteProduct,
   search,
-  category, relateditems
+  category, relateditems,getTopOffers,getBestSellers
 };

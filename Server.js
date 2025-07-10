@@ -1,45 +1,42 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const pool = require('./Db');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+
+const errorHandler = require('./middlewares/errorHandler');
+
 
 const app = express();
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(cors());
+app.use(helmet());
+app.use(express.json({ limit: '10kb' }));
 
-app.use(cors({ origin: 'http://localhost:3000',
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization"], }));
-app.use(express.json());
-const userRoutes = require('./routes/userRoutes');
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests, try again later.',
+}));
 
-const productRoutes = require('./routes/productRoutes');
+// Routes
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/slots', require('./routes/slotRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/users/addresses', require('./routes/addressRoutes'));
 
-const orderRoutes = require('./routes/orderRoutes');
-const otpRoutes = require('./routes/otpRoutes');
-const adminRoutes=require("./routes/adminproductRoutes")
-const slotRoutes = require('./routes/slotRoutes');
-app.use('/api/slots', slotRoutes);
-const paymentRoutes = require("./routes/paymentRoutes");
-app.use("/api/payments", paymentRoutes);
-const addressRoutes = require('./routes/addressRoutes');
-app.use('/api/users/addresses', addressRoutes);
-
-
-
-// Test route
-app.get('/api/health', (req, res) => {
+// Health Check
+app.get('/health', (req, res) => {
   res.json({ status: 'Backend is running ✅' });
 });
-// User route
-app.use('/api/users', userRoutes);
-//Admin route
-// app.use("./api/admin",adminRoutes)
-// Product route
-app.use('/api/products', productRoutes);
-// Order route
-app.use('/api/orders', orderRoutes);
-// Otp route
-app.use('/api/users', otpRoutes);
+
+// Global error handler (MUST be last middleware)
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
