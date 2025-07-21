@@ -1,8 +1,14 @@
 const jwt = require('jsonwebtoken');
 const pool = require('../Db');
+const twilio = require('twilio');
 
-// Temporary in-memory store for OTPs (dev/test only)
 const otpStore = {};
+
+// Twilio client setup
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
 
 // Step 1: Send OTP
 const sendOtp = async (req, res) => {
@@ -21,9 +27,24 @@ const sendOtp = async (req, res) => {
     expiresAt: Date.now() + 5 * 60 * 1000,
   };
 
-  console.log(`✅ OTP sent to ${key}: ${otp}`);
+  try {
+    if (phone) {
+      // Send OTP via Twilio SMS
+      await client.messages.create({
+        body: `Your Calcutta Fresh Food Login OTP code is ${otp}`,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: `+91${phone}`, // modify if needed for international use
+      });
+    }
 
-  res.json({ message: 'OTP sent successfully' });
+    // ✅ Still log the OTP to the console for dev/test purposes
+    console.log(`✅ OTP sent to ${key}: ${otp}`);
+
+    res.json({ message: 'OTP sent successfully' });
+  } catch (error) {
+    console.error('❌ Failed to send OTP:', error);
+    res.status(500).json({ error: 'Failed to send OTP' });
+  }
 };
 
 // Step 2: Verify OTP and generate JWT
