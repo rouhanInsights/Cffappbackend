@@ -172,6 +172,7 @@ const getTopOffers = async (req, res) => {
          p.image_url,
          p.created_at,
          c.category_name,
+         c.category_id,
          CASE 
            WHEN p.sale_price IS NOT NULL AND p.sale_price < p.price 
            THEN ROUND(((p.price - p.sale_price) / p.price) * 100)
@@ -218,6 +219,7 @@ const getBestSellers = async (req, res) => {
          p.image_url,
          p.created_at,
          c.category_name,
+         c.category_id,
          CASE 
            WHEN p.sale_price IS NOT NULL AND p.sale_price < p.price 
            THEN ROUND(((p.price - p.sale_price) / p.price) * 100)

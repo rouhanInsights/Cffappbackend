@@ -17,7 +17,7 @@ const {
 // PUBLIC ROUTES (order matters!)
 router.get('/category', category); // /products/category
 router.get('/search', search);     // /products/search
-router.get('/related/:category_id/:exclude_id', relateditems); // /products/related/...
+
 router.get("/top-offers", getTopOffers);
 router.get("/best-sellers", getBestSellers);
 
@@ -26,7 +26,7 @@ router.get('/', getAllProducts);   // /products
 
 // DYNAMIC ROUTES (MUST BE LAST)
 router.get('/:id', getProductById); // /products/:id → should always be a number
-
+router.get('/related/:category_id/:exclude_id', relateditems); // /products/related/...
 // ADMIN ROUTES
 router.post('/', createProduct);
 router.put('/:id', updateProduct);
