@@ -1,16 +1,9 @@
 const jwt = require('jsonwebtoken');
 const pool = require('../Db');
-const twilio = require('twilio');
 
 const otpStore = {};
 
-// Twilio client setup
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-// Step 1: Send OTP
+// Step 1: Send OTP (Console only)
 const sendOtp = async (req, res) => {
   const { phone, email } = req.body;
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -27,24 +20,10 @@ const sendOtp = async (req, res) => {
     expiresAt: Date.now() + 5 * 60 * 1000,
   };
 
-  try {
-    if (phone) {
-      // Send OTP via Twilio SMS
-      await client.messages.create({
-        body: `Your Calcutta Fresh Food Login OTP code is ${otp}`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: `+91${phone}`, // modify if needed for international use
-      });
-    }
+  // ✅ Log OTP for testing
+  console.log(`✅ OTP sent to ${key}: ${otp}`);
 
-    // ✅ Still log the OTP to the console for dev/test purposes
-    console.log(`✅ OTP sent to ${key}: ${otp}`);
-
-    res.json({ message: 'OTP sent successfully' });
-  } catch (error) {
-    console.error('❌ Failed to send OTP:', error);
-    res.status(500).json({ error: 'Failed to send OTP' });
-  }
+  res.json({ message: 'OTP generated and logged to console' });
 };
 
 // Step 2: Verify OTP and generate JWT
@@ -76,11 +55,11 @@ const verifyOtp = async (req, res) => {
       const insertQuery = phone
         ? await pool.query(
             'INSERT INTO cust_users (phone, name) VALUES ($1, $2) RETURNING *',
-[phone, 'New User']
+            [phone, 'New User']
           )
         : await pool.query(
             'INSERT INTO cust_users (email, name) VALUES ($1, $2) RETURNING *',
-[email, 'New User']
+            [email, 'New User']
           );
       user = insertQuery.rows[0];
     }
@@ -98,6 +77,4 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-
-
-module.exports = { sendOtp, verifyOtp};
+module.exports = { sendOtp, verifyOtp };

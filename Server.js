@@ -4,7 +4,7 @@ require('dotenv').config();
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-
+const feedbackRoutes = require("./routes/feedbackRoutes");
 const errorHandler = require('./middlewares/errorHandler');
 
 
@@ -27,7 +27,7 @@ app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/slots', require('./routes/slotRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/users/addresses', require('./routes/addressRoutes'));
-
+app.use("/api/feedback", feedbackRoutes);
 // Health Check
 app.get('/health', (req, res) => {
   res.json({ status: 'Backend is running ✅' });
