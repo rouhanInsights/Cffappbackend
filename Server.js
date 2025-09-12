@@ -7,7 +7,7 @@ const path = require('path');
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const locationRoutes=require("./routes/locationRoutes");
 const errorHandler = require('./middlewares/errorHandler');
-
+const pool=require('./Db')
 
 const app = express();
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
