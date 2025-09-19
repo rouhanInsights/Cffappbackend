@@ -34,7 +34,14 @@ app.use("/api/location", locationRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'Backend is running ✅' });
 });
-
+app.get('/api/health/db', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT 1 as ok');
+    res.json({ ok: true, db: r.rows[0].ok === 1 });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 // Global error handler (MUST be last middleware)
 app.use(errorHandler);
 
